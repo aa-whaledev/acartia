@@ -1,0 +1,110 @@
+# Use the official Node.js 18 image - much simpler and more reliable
+FROM node:18.13.0-bullseye-slim
+
+# Install build dependencies for native modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade to npm 9.2.0 to match server
+RUN npm install -g npm@9.2.0
+
+# Verify versions
+RUN node --version && npm --version
+
+# Set working directory
+WORKDIR /app
+
+# Copy backend package.json and install dependencies first
+COPY package*.json ./
+RUN npm install
+
+# Copy frontend package.json (without any lock file - let it generate fresh)
+COPY src/client/package.json ./src/client/
+WORKDIR /app/src/client
+
+# Install exact working versions to avoid compatibility issues
+# These versions are known to work together with this IPFS/Vue setup
+RUN npm install \
+    vue@3.2.0 \
+    vue-router@4.0.13 \
+    vuex@4.1.0 \
+    vue-multiselect@3.1.0 \
+    --legacy-peer-deps
+
+# Install remaining dependencies
+RUN npm install --legacy-peer-deps
+
+# Update browserslist to avoid build warnings
+RUN npx browserslist@latest --update-db || true
+
+# Copy environment variables file
+COPY .env.frontend ./.env
+
+# Copy the rest of the client source
+COPY src/client/ .
+
+# Update existing vue.config.js to add webpack config for .proto files and IPFS modules
+RUN echo 'module.exports = { \
+  pages: { \
+    index: { \
+      entry: "./src/main.js", \
+      template: "./index.html", \
+      title: "Acartia" \
+    } \
+  }, \
+  transpileDependencies: ["vue-multiselect"], \
+  configureWebpack: { \
+    resolve: { \
+      alias: { \
+        "stream": "stream-browserify" \
+      } \
+    }, \
+    externals: { \
+      "multiformats/basics": "{}" \
+    }, \
+    node: { \
+      crypto: false, \
+      util: false \
+    }, \
+    module: { \
+      rules: [ \
+        { \
+          test: /\.proto$/, \
+          use: "raw-loader" \
+        }, \
+        { \
+          test: /uint8arrays.*util.*bases/, \
+          use: "null-loader" \
+        } \
+      ] \
+    } \
+  } \
+};' > vue.config.js
+
+# Install missing dependencies for IPFS ecosystem  
+RUN npm install \
+    stream-browserify \
+    buffer \
+    raw-loader \
+    null-loader \
+    --save-dev --legacy-peer-deps
+
+# Create multiformats directory and stub file
+RUN mkdir -p node_modules/multiformats && \
+    echo 'module.exports = { base16: {}, base32: {}, base64: {}, base64url: {} };' > node_modules/multiformats/basics.js
+
+# Build the application
+RUN npm run build
+
+# Install a simple HTTP server to serve the built files
+RUN npm install -g serve
+
+# Expose port 8080 (default for Vue CLI serve)
+EXPOSE 8080
+
+# Start the application
+CMD ["serve", "-s", "dist", "-l", "8080", "-p", "8080"]
