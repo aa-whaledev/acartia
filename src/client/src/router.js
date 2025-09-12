@@ -3,7 +3,7 @@ import Login from './components/Pages/LoginPage'
 import Dashboard from './components/Pages/DashboardPage'
 import ManageData from './components/Pages/DataPage'
 import Register from './components/Pages/RegisterPage'
-import ManageUsers from './components/Pages/ApprovalsPage'
+//import ManageUsers from './components/Pages/ApprovalsPage'
 import Visualiser from './components/Pages/VisualiserPage'
 import Heatmap from './components/Pages/HeatmapPage'
 import Partners from './components/Pages/PartnersPage.vue'
@@ -22,6 +22,7 @@ import AccountSettings from './components/Pages/ProfileComponents/AccountSetting
 import ActiveTokens from './components/Pages/ProfileComponents/ActiveTokens.vue'
 import YourContributions from './components/Pages/ProfileComponents/Contributions.vue'
 import DeleteAccount from './components/Pages/ProfileComponents/DeleteAccount.vue'
+import ManageUsers from './components/Pages/ManageUsers.vue'
 import store from './store'
 
 const router = createRouter({
@@ -142,25 +143,25 @@ const router = createRouter({
       component: Contributions
     },
     {
-      // Manage Users page to confirm user registration
-      path: '/manage-users',
+      // Manage Users page to manage user registration
+      path: '/ManageUsers',
       name: 'ManageUsers',
       component: ManageUsers,
-      beforeEnter: (to, from, next) => {
-        let hasToken = sessionStorage.getItem('userToken')
-        let isRestricted = store.state.isAuthenticated === false
-        let isLegitUser = store.state.token != null
-        let isAdmin = store.state.isAdmin === true
-        if (isRestricted && !isLegitUser && !hasToken) {
-          next('/login')
-        }
-        else if (!isAdmin) {
-          next('/data-explorer')
-        }
-        else {
-          next()
-        }
-      }
+      // beforeEnter: (to, from, next) => {
+      //   let hasToken = sessionStorage.getItem('userToken')
+      //   let isRestricted = store.state.isAuthenticated === false
+      //   let isLegitUser = store.state.token != null
+      //   let isAdmin = store.state.isAdmin === true
+      //   if (isRestricted && !isLegitUser && !hasToken) {
+      //     next('/login')
+      //   }
+      //   else if (!isAdmin) {
+      //     next('/data-explorer')
+      //   }
+      //   else {
+      //     next()
+      //   }
+      // }
     },
     {
       // Visualiser page to view data visualisations
@@ -240,6 +241,7 @@ const router = createRouter({
       name: 'DeleteAccount',
       component: DeleteAccount
     },
+    
   ]
 })
 
