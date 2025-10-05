@@ -55,6 +55,7 @@
                         <th>Role</th>
                         <th>Last Login</th>
                         <th>Contributions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,6 +65,9 @@
                         <td>{{ user.role }}</td>
                         <td>{{ user.lastLogin }}</td>
                         <td>{{ user.contributions }}</td>
+                        <td>
+                            <button v-if="user.role !== 'Admin'" class="promote-btn" @click="promoteToAdmin(user.id)">Promote to Admin</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -105,11 +109,24 @@ export default {
     },
     methods: {
         approveUser(id) {
-            // Implement approve logic here
+            // Find the user in userRequests
+            const user = this.userRequests.find(user => user.id === id);
+            if (user) {
+                // Add to currentUsers with default properties as mock data is being used
+                this.currentUsers.push({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: 'User',
+                    lastLogin: '-',
+                    contributions: 0
+                });
+            }
+            // Remove from userRequests
             this.userRequests = this.userRequests.filter(user => user.id !== id);
         },
         denyUser(id) {
-            // Implement deny logic here
+            // Implement deny logic here, are users notified? For now, just remove from requests
             this.userRequests = this.userRequests.filter(user => user.id !== id);
         },
         exportUsersToCSV() {
@@ -129,11 +146,30 @@ export default {
             link.click();
             document.body.removeChild(link);
         },
+        promoteToAdmin(id) {
+            this.currentUsers = this.currentUsers.map(user =>
+                user.id === id ? { ...user, role: 'Admin' } : user
+            );
+        },
     },
 };
 </script>
 
 <style scoped>
+.promote-btn {
+    background: #bdbdbd;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+.promote-btn:hover {
+    background: #757575;
+}
 .page-container {
     font-family: 'Montserrat', sans-serif;
     color: #545F71;

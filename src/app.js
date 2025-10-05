@@ -5,7 +5,7 @@ import expressApp from './services/express'
 import express from 'express'
 import path from 'path'
 import api from './api'
-import { dbService, getAll, getItem, post } from './services/orbitdb'
+// import { dbService, getAll, getItem, post } from './services/orbitdb'
 import { EventEmitter } from 'events'
 
 // Prevent max listener warnings upon running the application
@@ -22,7 +22,7 @@ if (mongo.uri) {
 }
 mongoose.Promise = Promise
 
-dbService()
+// dbService()
 
 setImmediate(() => {
   server.listen(port, ip, () => {
