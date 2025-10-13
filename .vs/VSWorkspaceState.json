@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\client",
+    "\\src\\client\\src",
+    "\\src\\client\\src\\components",
+    "\\src\\client\\src\\components\\Pages"
+  ],
+  "SelectedNode": "\\src\\client\\src\\components\\Pages\\Leaderboard.vue",
+  "PreviewInSolutionExplorer": false
+}
