@@ -43,6 +43,12 @@
           Leaderboard
         </router-link>
 
+          <!-- Manage Users Button -->
+          <router-link to="/ManageUsers" class="button-primary" @click.native="closeMobileMenu">
+            <img src="@/assets/menu-account-icon.svg" alt="Manage Users Icon" class="menu-icon" />
+            Manage Users
+          </router-link>
+
         <!-- Map Dropdown -->
         <div class="dropdown" @mouseenter="toggleDropdown('mapDropdown')" @mouseleave="toggleDropdown(null)"
           :class="{ active: isActive(['/data-explorer', '/heatmap']) }">
@@ -89,6 +95,7 @@
             <router-link to="/profile/account-settings">Update Profile</router-link>
             <router-link to="/profile/active-tokens">Create Token</router-link>
             <router-link to="/profile/your-contributions">Contributor Profile</router-link>
+            <!--<router-link to="/ManageUsers">Manage Users</router-link>  -->
             <router-link to="/profile/delete-account">Delete Profile</router-link>
             <a v-if="!isMobileMenuOpen" @click="logoutMethod"><img src="@/assets/menu-sign-out-icon.svg"
                 alt="Log In Icon" class="menu-icon" />Log Out</a>
