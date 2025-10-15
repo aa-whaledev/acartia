@@ -585,7 +585,11 @@ export default {
   }
 
   .dropdown-content a:hover {
-    background-color: rgba(0, 88, 93, 0.1);
+    background-color: rgba(0, 242, 255, 0.1);
+  }
+/*SPRINT 2 UPDATE HERE FOR THE BOX OVERLAP IN MAP HOVER */
+  .dropdown-content a:last-child:hover {
+    border-radius: 0px 0px 16px 16px;
   }
 
   .down-arrow-icon {

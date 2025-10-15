@@ -4,6 +4,8 @@ import IPFS from 'ipfs'
 import OrbitDB from 'orbit-db'
 import { filterSightingData, filterTableData, sortApiDataChronologically, getSpeciesAndContributors, transformApiDataToMappableData } from './mapUtils'
 import { generateInitFilterState } from "./constants"
+import * as d3 from "d3";
+
 
 const store = createStore(
   {
@@ -14,6 +16,7 @@ const store = createStore(
       userDetails: [],
       isAdmin: false,
       userRequestList: [],
+      selectedYear: null,
 
       //Data state
       sightings: [],
@@ -77,6 +80,9 @@ const store = createStore(
         state.profile = profile
       },
 
+      //chats State below
+      setSelectedYear(state, y) { state.selectedYear = y; },
+      
       //Sightings state
       setSightings(state, sightings) {
         state.sightings = sightings
@@ -755,6 +761,33 @@ const store = createStore(
 
         commit('addToast', newToast);
       },
+      async loadCsvSightings({ state, commit }) {
+  if (state.sightings.length) return; // already loaded
+  commit('setLoading', true);
+  try {
+    const base = (process.env.BASE_URL || "/");
+    const url = base.replace(/\/$/, "/") + "data/acartia-export.csv";
+    const raw = await d3.csv(url);
+
+    // normalize -> same shape as API result used by your charts
+    const rows = raw.map((d) => {
+      const created = d.created || d.created_at || d.date || d.timestamp || d.time || d.observed_at;
+      const date = created ? new Date(created) : null;
+      const sizeRaw = d.no_sighted ?? d.noSighted ?? d.no_sightings ?? d.group_size ?? d.count ?? d.size;
+      const no_sighted = Number(sizeRaw ?? 1) || 1;
+      const type = (d.type ?? d.species ?? d.Species ?? d.species_name ?? d.SpeciesName ?? d.category ?? d.name ?? "Unknown").toString().trim();
+      return { created: date?.toISOString?.() ?? null, no_sighted, type };
+    }).filter(r => r.created && !isNaN(Date.parse(r.created)));
+
+    commit('setSightings', rows);
+  } catch (err) {
+    console.error("Failed to load /data/acartia-export.csv", err);
+    commit('setSightings', []);
+  } finally {
+    commit('setLoading', false);
+  }
+},
+
 
     },
   }
