@@ -45,7 +45,7 @@ export default {
 <style scoped>
 .content {
  height:100%;
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -63,7 +63,7 @@ h2 {
 dt {
   text-align: center;
   font-family: Mukta;
-  font-size:calc(14px + 0.4vw);
+  font-size:calc(14px + 0.2vw);
   font-style: normal;
   font-weight: 400;
 }
@@ -92,7 +92,7 @@ dd {
   padding: 1vh;
   justify-content: space-between;
   align-items: center;
-  font-size:calc(14px + 0.4vw);
+  font-size:calc(10px + 0.4vw);
   width: 100%;
 }
 
