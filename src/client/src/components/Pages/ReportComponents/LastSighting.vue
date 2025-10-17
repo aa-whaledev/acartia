@@ -82,18 +82,18 @@ h2 {
 .sighting {
   text-align: center;
   border-radius: 15px;
-  margin-top: 1rem;
+  margin-top: 0.1rem;
 }
 
 .sighting-header {
-  margin-bottom: 1rem;
+  margin-bottom: 0.2rem;
 }
 
 .sighting-title {
   overflow-x: visible;
   font-family: Montserrat;
   font-style: normal;
-  font-size:calc(10px + 0.3vw);
+  font-size:calc(10px + 0.1vw);
   margin-bottom: 0px;
 }
 
@@ -101,13 +101,19 @@ h2 {
   color: var(--Neutrals-Black, #0C0826);
   text-align: center;
   font-family: Montserrat;
-  font-size:calc(10px + 0.3vw);
+  font-size:calc(10px + 0.2vw);
   font-style: normal;
   font-weight: 400;
   line-height: 100%;
 }
 .row {
-  height:25vh;
-  margin-top:0.5rem;
+  height:15vh;
+  margin-top:0.4rem;
 }
+
+.mb-2,.col-6 {
+margin: 0px;
+padding: 0px;
+}
+
 </style>
