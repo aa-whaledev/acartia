@@ -1,7 +1,5 @@
 <template>
   <div class="complexa-root">
-    <!--<h2>Temporal Species Sightings Heat Map with <u>D3</u></h2>-->
-
     <!-- Optional export buttons (kept but disabled as per your current setup) -->
     <div class="export-buttons">
       <!--<button class="expobutt" @click="exportHeatmap('png')">Export PNG</button>-->
@@ -9,44 +7,32 @@
       <!-- <button class="expobutt" @click="exportHeatmapPDF">Export PDF</button> -->
     </div>
 
-    <!-- NEW: Species category toggles (top-left), OR logic across selected categories -->
-    <div class="species-filters">
-      <label class="switch">
-        <input type="checkbox" v-model="fltOrca" @change="updateHeatmap" />
-        <span>Orca</span>
-      </label>
-      <label class="switch">
-        <input type="checkbox" v-model="fltWhale" @change="updateHeatmap" />
-        <span>Whale</span>
-      </label>
-      <label class="switch">
-        <input type="checkbox" v-model="fltDolphin" @change="updateHeatmap" />
-        <span>Dolphin</span>
-      </label>
-      <label class="switch">
-        <input type="checkbox" v-model="fltOther" @change="updateHeatmap" />
-        <span>Other</span>
-      </label>
-    </div>
-
-    <!-- Mode toggle (top-right) -->
-    <div class="mode-toggle">
-      <label class="mode-label">
-        <span>Color by</span>
-        <select v-model="colorBy" @change="updateHeatmap">
-          <option value="delta">Change (Δ vs prev)</option>
-          <option value="absolute">Absolute count</option>
-        </select>
-      </label>
-    </div>
-
     <!-- Heatmap Container (fills the component; parent controls the card size) -->
-    <div ref="heatmap" class="heatmap-container"></div>
+    <div ref="heatmap" class="heatmap-container">
+      <!-- Species category toggles (right side, vertical) -->
+      <div class="species-filters-vertical">
+        <label class="switch">
+          <input type="checkbox" v-model="fltOrca" @change="updateHeatmap" />
+          <span>Orca</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" v-model="fltWhale" @change="updateHeatmap" />
+          <span>Whale</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" v-model="fltDolphin" @change="updateHeatmap" />
+          <span>Dolphin</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" v-model="fltOther" @change="updateHeatmap" />
+          <span>Other</span>
+        </label>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import html2canvas from 'html2canvas';
 import * as d3 from 'd3';
 
 export default {
@@ -57,17 +43,9 @@ export default {
       filteredSightings: [],
       selectedYear: 2023, // legacy local value; global is used for filtering
       availableYears: [],
-      // Palette used for absolute counts
-      // colorRange: ['#DAFDBA', '#f51b1b', '#45C4B0', '#f51b1b', '#8a1313']
-      // colorRange: ['#1B2B7B', '#1B2BCF', '#38A7FF', '#38E1FF', '#D8E1FF']
-      colorRange: ['#D8E1FF', '#38E1FF', '#38A7FF', '#1B2BCF', '#1B2B7B'],
-
-      // NEW: how to color cells: 'delta' (default) or 'absolute'
-      colorBy: 'delta',
-
-      // NEW: species filters (checkboxes); OR logic across selected
+      // Default: Whale filter ON
       fltOrca: false,
-      fltWhale: false,
+      fltWhale: true,
       fltDolphin: false,
       fltOther: false,
     };
@@ -96,9 +74,7 @@ export default {
     this.updateHeatmap();
 
     // Redraw on global year change
-    this.$watch(() => this.$store?.state?.selectedYear, () => {
-      this.updateHeatmap();
-    });
+    this.$watch(() => this.$store?.state?.selectedYear, () => this.updateHeatmap());
 
     // Redraw on resize for responsiveness
     window.addEventListener('resize', this.updateHeatmap);
@@ -119,13 +95,13 @@ export default {
         return {
           species,                                  // lowercased for grouping
           speciesLabel: speciesRaw || 'Unknown',    // original text for display
-          category: this.classifyCategory(species), // NEW: orca/whale/dolphin/other
-          source: d.data_source_witness?.trim().toLowerCase() || 'unknown',
+          category: this.classifyCategory(species), // orca/whale/dolphin/other
+          source: d.data_source_witness?.toString().trim().toLowerCase() || 'unknown',
           date: new Date(d.created),
           lat: Math.round(+d.latitude || 0),
           lon: Math.round(+d.longitude || 0)
         };
-      }).filter(d => d.species && !d.species.includes('other'));
+      }).filter(d => d.species); // keep 'other' so the Other toggle works
 
       // Dynamically extract years from the date field
       const allYears = Array.from(new Set(this.rawSightings.map(d => d.date.getFullYear()))).sort();
@@ -135,7 +111,7 @@ export default {
       this.selectedYear = allYears[allYears.length - 1];
     },
 
-    // NEW: simple keyword-based classifier → 'orca' | 'whale' | 'dolphin' | 'other'
+    // Simple keyword-based classifier → 'orca' | 'whale' | 'dolphin' | 'other'
     classifyCategory(speciesLower) {
       const s = (speciesLower || '').toLowerCase();
 
@@ -158,10 +134,10 @@ export default {
       if (isNaN(this.selectedYearNum)) {
         this.filteredSightings = [];
       } else {
-        // filter first by year
+        // Filter first by year
         let rows = this.rawSightings.filter(d => d.date.getFullYear() === this.selectedYearNum);
 
-        // then by species category toggles (OR logic; if none selected => show all)
+        // Then by species category toggles (OR logic; if none selected => show all)
         const anyToggle = this.fltOrca || this.fltWhale || this.fltDolphin || this.fltOther;
         if (anyToggle) {
           rows = rows.filter(r =>
@@ -175,7 +151,7 @@ export default {
         this.filteredSightings = rows;
       }
 
-      d3.select(this.$refs.heatmap).selectAll('*').remove();
+      d3.select(this.$refs.heatmap).selectAll('svg').remove();
       this.drawHeatmap();
     },
 
@@ -245,7 +221,7 @@ export default {
       const svg = d3.select(host)
         .append('svg')
         .attr('width', '100%')
-        .attr('height', '70%') // keep your working layout
+        .attr('height', '70%') /* original size preserved */
         .attr('viewBox', `0 0 ${width} ${height}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
 
@@ -261,29 +237,19 @@ export default {
         .range([0, innerH])
         .padding(0.05);
 
-      // ABSOLUTE counts palette (your existing threshold logic)
-      const maxValue = d3.max(heatData, d => d.value) || 0;
-      const colorAbs = d3.scaleThreshold()
-        .domain(d3.range(1, this.colorRange.length).map(i => maxValue * i / this.colorRange.length))
-        .range(this.colorRange);
-
       // DELTA (change vs previous month): diverging scale centered at 0
       const maxAbsDelta = d3.max(heatData, d => Math.abs(d.delta)) || 1e-6;
-
-      // Prefer RdYlGn if available; otherwise fall back to a custom diverging ramp
-      const divergeInterp = d3.interpolateRgbBasis([
-        "#08306b", // deep navy (large negative change)
-        "#4292c6", // medium blue
-        "#deebf7", // pale blue/near neutral
-        "#9ecae1", // medium-light blue for small positive
-        "#08519c"  // stronger blue for large positive
-      ]);
-
       const colorDelta = d3.scaleDiverging()
         .domain([-maxAbsDelta, 0, maxAbsDelta])
-        .interpolator(divergeInterp);
+        .interpolator(d3.interpolateRgbBasis([
+          "#08306b",
+          "#4292c6",
+          "#deebf7",
+          "#9ecae1",
+          "#08519c"
+        ]));
 
-      // Axes
+      // Axes (species names on the left as in the original)
       g.append('g')
         .attr('transform', `translate(0, ${innerH})`)
         .call(d3.axisBottom(x).tickSize(0))
@@ -310,7 +276,7 @@ export default {
         .style('pointer-events', 'none')
         .style('z-index', 1000);
 
-      const blocks = g.selectAll('rect')
+      g.selectAll('rect')
         .data(heatData)
         .enter()
         .append('rect')
@@ -320,21 +286,16 @@ export default {
         .attr('ry', 4)
         .attr('width', Math.max(0, x.bandwidth()))
         .attr('height', Math.max(0, y.bandwidth()))
-        .style('fill', d => this.colorBy === 'delta' ? colorDelta(d.delta) : colorAbs(d.value))
+        .style('fill', d => colorDelta(d.delta))
         .style('stroke-width', 2)
         .style('stroke', 'none')
         .style('opacity', 0.8)
-        .on('mouseover', function () {
-          d3.select(this).style('stroke', '#fff').style('opacity', 1);
-          tooltip.style('opacity', 1);
-        })
         .on('mousemove', (event, d) => {
           const prevMonth = d.monthIndex - 1;
           const speciesCounts = sightingsMap.get(d.species) || {};
           const prevValue = speciesCounts[prevMonth] || 0;
           const currValue = d.value;
 
-          // % change for display (uses prev guard)
           let changeText = '–';
           if (prevValue > 0) {
             const pct = ((currValue - prevValue) / prevValue) * 100;
@@ -344,6 +305,7 @@ export default {
           }
 
           tooltip
+            .style('opacity', 1)
             .html(
               `<strong>${d.species}</strong><br>
                Month: ${d.month}<br>
@@ -354,55 +316,27 @@ export default {
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
         })
-        .on('mouseleave', function () {
-          d3.select(this).style('stroke', 'none').style('opacity', 0.8);
-          tooltip.style('opacity', 0);
-        });
-
-      blocks
-        .style('opacity', 0)
-        .transition()
-        .duration(800)
-        .ease(d3.easeCubicInOut)
-        .style('opacity', 0.8);
-
-      // Title (inside inner area, scaled with width)
-      g.append('text')
-        .attr('x', 0)
-        .attr('y', -20)
-        .attr('font-size', Math.max(14, Math.min(22, innerW / 20)))
-        .text(`Species Sightings by Month (${this.selectedYearNum || this.selectedYear})`);
+        .on('mouseleave', () => tooltip.style('opacity', 0));
     },
-
-    exportHeatmap(format) {
-      const node = this.$refs.heatmap;
-      html2canvas(node).then(canvas => {
-        const link = document.createElement('a');
-        const yr = this.$store?.state?.selectedYear || this.selectedYear;
-        link.download = `heatmap_${yr}.${format}`;
-        link.href = canvas.toDataURL(`image/${format}`);
-        link.click();
-      });
-    }
   }
 };
 </script>
 
 <style scoped>
 .complexa-root {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0px;
-  height: 70%;
+  height: 70%; /* original size preserved */
 }
 
 /* Container fills the card: Reports page controls the card size */
 .heatmap-container {
   position: relative;
   width: 100%;
-  height: 70%;
-  /* Ensure there’s at least some height if parent collapses on very small screens */
-  min-height: 240px;
+  height: 70%;       /* original size preserved */
+  min-height: 240px; /* original safety min-height */
 }
 
 .tooltip,
@@ -411,7 +345,7 @@ export default {
   z-index: 1000;
 }
 
-.expobutt {
+.export-buttons .expobutt {
   background-color: #13678A;
   color: white;
   border: none;
@@ -420,59 +354,40 @@ export default {
   cursor: pointer;
   margin-left: 5px;
 }
-.expobutt:hover {
+.export-buttons .expobutt:hover {
   background-color: #0d4d6d;
 }
 
-/* NEW: compact mode toggle in top-right */
-.mode-toggle {
+/* Right-side vertical toggle bar */
+.species-filters-vertical {
   position: absolute;
   top: 8px;
-  right: 8px;
-  z-index: 2;
-}
-.mode-label {
-  font-size: 12px;
+  right: -8px;
   display: flex;
-  gap: 6px;
-  align-items: center;
-  background: rgba(255,255,255,.9);
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-.mode-label select {
-  font-size: 12px;
-  padding: 2px 6px;
-}
-
-/* NEW: species filter pill group (top-left) */
-.species-filters {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(2px);
-  padding: 8px 10px;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.31);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
+  padding: 10px;
   border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  max-width: calc(100% - 16px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 999;
 }
 .switch {
-  display: inline-flex;
-  gap: 6px;
+  display: flex;
   align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: #111827;
-  user-select: none;
 }
 .switch input {
-  transform: scale(1.0);
   cursor: pointer;
 }
 </style>
