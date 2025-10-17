@@ -30,6 +30,17 @@
         <router-link to="/reports" :class="{ active: isActive('/reports') }" @click.native="closeMobileMenu">
           <img src="@/assets/menu-reports-icon.svg" alt="Reports Icon" class="menu-icon" />
           Reports
+        </router-link> 
+
+
+        <router-link to="/profilefront" :class="{ active: isActive('/profilefront') }" @click.native="closeMobileMenu">
+          <img src="@/assets/menu-account-icon.svg" alt="Profile Icon" class="menu-icon" />
+          Profile
+        </router-link>
+        
+        <router-link to="/leaderboard" :class="{ active: isActive('/leaderboard') }" @click.native="closeMobileMenu">
+          <img src="@/assets/menu-contributors-icon.svg" alt="Leaderboard Icon" class="menu-icon" />
+          Leaderboard
         </router-link>
 
         <!-- Manage Users Button -->

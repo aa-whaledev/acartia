@@ -11,7 +11,7 @@ import About from './components/Pages/AboutPage'
 import Home from './components/Pages/HomePage'
 import ResetPassword from './components/Pages/ResetPassword'
 import ForgotPassword from './components/Pages/ForgotPassword'
-import Profile from './components/Pages/ProfilePage.vue';
+// import Profile from './components/Pages/ProfilePage.vue';
 import Reports from './components/Pages/ReportsPage.vue';
 import Contributions from './components/Pages/ContributionPage'
 import Contribute from './components/Pages/ContributePage'
@@ -24,6 +24,9 @@ import YourContributions from './components/Pages/ProfileComponents/Contribution
 import DeleteAccount from './components/Pages/ProfileComponents/DeleteAccount.vue'
 import ManageUsers from './components/Pages/ManageUsers.vue'
 import store from './store'
+
+import Leaderboard from './components/Pages/Leaderboard.vue'
+import ProfileFront from './components/Pages/ProfileFront.vue'
 
 const router = createRouter({
   mode: 'history',
@@ -46,19 +49,25 @@ const router = createRouter({
       }
     },
     {
-      path: '/profile/:section',
-      name: 'Profile',
-      component: Profile,
-      props: true,
-      beforeEnter: (to, from, next) => {
-        let hasToken = sessionStorage.getItem('userToken');
-        let isAuthenticated = store.state.isAuthenticated === true;
-        if (isAuthenticated && hasToken) {
-          next();
-        } else {
-          next('/login'); // Redirect to login if not authenticated
-        }
-      }
+      path: '/profilefront',
+      name: 'ProfileFront',
+      component: ProfileFront
+      // props: true,
+      // beforeEnter: (to, from, next) => {
+      //   let hasToken = sessionStorage.getItem('userToken');
+      //   let isAuthenticated = store.state.isAuthenticated === true;
+      //   if (isAuthenticated && hasToken) {
+      //     next();
+      //   } else {
+      //     next('/login'); // Redirect to login if not authenticated
+      //   }
+      // }
+    },
+    {
+      
+      path: '/leaderboard',
+      name: 'Leaderboard',
+      component: Leaderboard
     },
     {
       // Login page
