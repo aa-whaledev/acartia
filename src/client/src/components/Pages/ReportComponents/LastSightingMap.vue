@@ -82,6 +82,7 @@ export default {
 #lastSightingContainer {
   width: 100%;
   height: 40%;
+  border-radius: 5px;
 }
 
 @media (max-width: 768px) {
