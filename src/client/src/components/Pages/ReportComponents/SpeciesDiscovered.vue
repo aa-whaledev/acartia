@@ -1,105 +1,159 @@
 <template>
-  <div class="content">
-    <h2>Species Discovered(Monthly)</h2>
-    <div id="species-chart"></div>
+  <div class="content shape">
+    <h2>Species Discovered (Monthly)</h2>
+    <div id="species-chart" ref="chartContainer"></div>
   </div>
 </template>
 
 <script>
-import * as d3 from 'd3'
-import { getSpeciesCounts } from '../../../mapUtils'
+import * as d3 from "d3";
+import { getSpeciesCounts } from "../../../mapUtils";
 
 export default {
-  name: 'SecondaryChart',
+  name: "SpeciesDiscovered",
+
   methods: {
-    secondaryChart() {
+    drawChart() {
+      const container = this.$refs.chartContainer;
+      if (!container) return;
 
-      let data = getSpeciesCounts(this.$store.state.sightings).slice(0, 5)
+      const el = d3.select(container);
+      el.selectAll("svg").remove();
 
-      let margin = { top: 10, right: 10, bottom: 20, left: 80 }
-      // Calculate the width and height based on the parent container's dimensions
-      let width = document.getElementById("species-chart").clientWidth
-      let height = document.getElementById("species-chart").clientHeight - 100
+      const data = getSpeciesCounts(this.$store.state.sightings) || [];
+      if (!data.length) return;
 
-      let svg = d3.select("#species-chart")
+      // Use only top 5 species
+      const sliced = data.slice(0, 5);
+
+      // --- Responsive container sizing (same logic as Heatmap)
+      const outerWidth = container.clientWidth;
+      const outerHeight = container.clientHeight;
+      const margin = { top: 10, right: 10, bottom: 25, left: 100 };
+      const width = outerWidth - margin.left - margin.right;
+      const height = outerHeight - margin.top - margin.bottom;
+
+      // Create SVG inside container
+      const svg = el
         .append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%")
+        .attr("width", outerWidth)
+        .attr("height", outerHeight)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-      // Determine the minimum and maximum values from the data
-      const xMin = d3.min(data, d => d.value);
-      const xMax = d3.max(data, d => d.value);
+      // --- Scales
+      const xMax = d3.max(sliced, (d) => d.value) || 1;
+      const x = d3.scaleLinear().domain([0, xMax]).nice().range([0, width]);
+      const y = d3
+        .scaleBand()
+        .domain(sliced.map((d) => d.species))
+        .range([0, height])
+        .padding(0.2);
 
-      // Create the x scale with the appropriate domain based on the data
-      let x = d3.scaleLinear()
-        .range([0, width])
-        .domain([xMin, xMax]);
+      // --- Axes
+      svg
+        .append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(5))
+        .call((g) => g.select(".domain").attr("opacity", 0.3));
 
-      let y = d3.scaleBand()
-        .range([height, 0])
-        .padding(0.1)
-        .domain(data.map(d => d.species));
+      svg.append("g").call(d3.axisLeft(y)).call((g) => g.select(".domain").remove());
 
-      svg.append("g")
-        .call(d3.axisLeft(y));
-
-      svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x).ticks(5).tickFormat(d => d < xMax ? d : `${xMax}+`));
-
-      svg.selectAll(".bar")
-        .data(data)
-        .enter().append("rect")
+      // --- Bars
+      const colors = ["#4D76B8", "#5FAAFF", "#224DBA", "#9DC4E8", "#3B62C2"];
+      svg
+        .selectAll(".bar")
+        .data(sliced)
+        .enter()
+        .append("rect")
         .attr("class", "bar")
         .attr("x", 0)
-        .attr("y", d => y(d.species))
-        .attr("width", d => x(d.value))
+        .attr("y", (d) => y(d.species))
         .attr("height", y.bandwidth())
-        .attr("fill", (_, i) => {
-          let colors = ['#4D76B8', '#5FAAFF', '#224DBA', '#9DC4E8'];
-          return colors[i];
-        });
-    }
+        .attr("width", 0)
+        .attr("fill", (_, i) => colors[i % colors.length])
+        .transition()
+        .duration(600)
+        .attr("width", (d) => x(d.value));
+
+      // --- Labels
+      svg
+        .selectAll(".label")
+        .data(sliced)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", (d) => x(d.value) + 5)
+        .attr("y", (d) => y(d.species) + y.bandwidth() / 2)
+        .attr("dy", "0.35em")
+        .text((d) => d.value)
+        .style("font-size", "11px")
+        .style("fill", "#333");
+    },
   },
+
   mounted() {
-    this.secondaryChart()
-    getSpeciesCounts(this.$store.state.sightings)
+    // Initial draw
+    this.drawChart();
+
+    // Redraw when data or container size changes
+    this.$watch(
+      () => this.$store.state.sightings,
+      () => this.drawChart(),
+      { deep: true, immediate: false }
+    );
+
+    // Responsive ResizeObserver (same as Heatmap)
+    const container = this.$refs.chartContainer;
+    this._resizeObserver = new ResizeObserver(() => {
+      this.drawChart();
+    });
+    this._resizeObserver.observe(container);
   },
-}
 
+  beforeUnmount() {
+    if (this._resizeObserver) this._resizeObserver.disconnect();
+  },
+};
 </script>
-
 
 <style scoped>
 .content {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
 }
 
 h2 {
   font-family: Mukta;
-  font-size: 1.5rem !important;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 105%;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.1;
   text-align: center;
-  /* 1.575rem */
+  margin: 0 0 8px 0;
 }
 
 #species-chart {
+  flex: 1 1 auto;
   width: 100%;
-  height: 25vh;
+  height: 100%;
+  min-height: 0;
 }
 
-.shape {
-  border-radius: 15px;
-  background-color: #FFF;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
+.bar {
+  rx: 6;
+  ry: 6;
 }
 
-.space {
-  margin: 1rem;
+.label {
+  font-family: Mukta, sans-serif;
+}
+
+:deep(.x-axis text),
+:deep(.y-axis text) {
+  font-size: 11px;
+  fill: #333;
 }
 </style>
