@@ -335,6 +335,7 @@ export default {
   width: 100%;
   height: 100%;
   min-height: 240px; /* ensure visibility on small screens */
+  border-radius: 10px;
 }
 
 /* Compact overlay filter panel (top-left) */
