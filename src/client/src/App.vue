@@ -38,16 +38,34 @@
           Profile
         </router-link>
         
-        <router-link to="/leaderboard" :class="{ active: isActive('/leaderboard') }" @click.native="closeMobileMenu">
+        <!-- <router-link to="/leaderboard" :class="{ active: isActive('/leaderboard') }" @click.native="closeMobileMenu">
           <img src="@/assets/menu-contributors-icon.svg" alt="Leaderboard Icon" class="menu-icon" />
           Leaderboard
-        </router-link>
+        </router-link> -->
 
-        <!-- Manage Users Button -->
+        <!-- Manage Users Button
         <router-link to="/ManageUsers" class="button-primary" @click.native="closeMobileMenu">
           <img src="@/assets/menu-account-icon.svg" alt="Manage Users Icon" class="menu-icon" />
           Manage Users
-        </router-link>
+        </router-link> -->
+
+        <!-- Users dropdown (temp to circumvent user auth issue when running locally) -->
+        <div class="dropdown" @mouseenter="toggleDropdown('userDropdown')" @mouseleave="toggleDropdown(null)"
+          :class="{ active: isActive(['/ManageUsers', '/leaderboard']) }">
+          <div class="dropdown-link" @click="navigateToDataExplorer">
+          <!-- Note: Consider replacing with new asset with UI team assistance -->
+            <img src="@/assets/menu-map-icon.svg" alt="Users Icon" class="menu-icon" />
+            Users
+          </div>
+          <div v-if="isDropdownOpen === 'userDropdown'" class="dropdown-content">
+            <router-link to="/ManageUsers" @click.native="closeMobileMenu">
+              Manage Users
+            </router-link>
+            <router-link to="/leaderboard" @click.native="closeMobileMenu">
+              Leaderboard
+            </router-link>
+          </div>
+        </div>
 
         <!-- Map Dropdown -->
         <div class="dropdown" @mouseenter="toggleDropdown('mapDropdown')" @mouseleave="toggleDropdown(null)"
