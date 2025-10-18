@@ -13,8 +13,8 @@
           />
         </div>
         <div class="profile-info">
-          <input v-model="editableUser.name" type="text" placeholder="Name" />
-          <input v-model="editableUser.position" type="text" placeholder="Position" />
+          <input v-model="editableUser.name" type="text" placeholder="Name" disabled  />
+          <input v-model="editableUser.position" type="text" placeholder="Position" disabled  />
         </div>
       </div>
 
