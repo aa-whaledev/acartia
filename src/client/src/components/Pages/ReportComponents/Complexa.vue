@@ -242,11 +242,11 @@ export default {
       const colorDelta = d3.scaleDiverging()
         .domain([-maxAbsDelta, 0, maxAbsDelta])
         .interpolator(d3.interpolateRgbBasis([
-          "#08306b",
-          "#4292c6",
-          "#deebf7",
+          "#08519c",
           "#9ecae1",
-          "#08519c"
+          "#deebf7",
+          "#4292c6",
+          "#08306b"
         ]));
 
       // Axes (species names on the left as in the original)
